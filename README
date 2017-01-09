@@ -1,52 +1,181 @@
-The C source to source transformation tool
-==========================================
+This file is part of the polca-transformation-rules package.
+------------------------------------------------------------
 
-The **C source to source transformation tool** is a program transformation
-environment, implemented in [Haskell](https://www.haskell.org/), where architecture-agnostic
-scientific C code with semantic annotations is transformed into
-functionally equivalent code better suited for a given platform.  The
-transformation steps are represented as rules which can be fired when
-certain syntactic and semantic conditions are fulfilled.  These rules
-are not hard-wired into the rewriting engine: they are written in a
-C-like language (STML) and are automatically processed and incorporated by
-the rewriting engine.  That makes it possible for end-users to add
-their own rules or to provide sets of rules which are adapted to
-certain specific domains or purposes.
+TABLE OF CONTENTS
+=================
 
-The C source transformation toolchain has been contributed by the
-[IMDEA SW Institute](http://software.imdea.org/es/) and the [Technical University of Madrid](http://www.upm.es/internacional).
+1. GENERAL INFORMATION
+2. ERROR REPORTS
+3. FILES IN THIS DISTRIBUTION
+4. INSTALLATION
+5. GETTING STARTED
+6. TRANSFORMING YOUR CODE
 
-Installation
-------------
+1. GENERAL INFORMATION
+======================
+
+IMPORTANT NOTICE:
+
+You are not allowed to change this README file.
+
+Copyright (c) 2013-2016, The IMDEA Software Institute
+Copyright (c) 2013-2016, Universidad Politécnica de Madrid
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+
+* Neither the name of the Universidad Politécnica de Madrid or the
+  name of The IMDEA Software Institute nor the names of their
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT
+HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+2. ERROR REPORTS
+================
+
+  If you think you found a genuine bug please report it together
+  with the following information:
+
+  - a short test file showing the behavior with all unnecessary
+    code removed.
+
+  - a transcript (log file) of the session that shows the error.
+
+Please note that it is important to make the file as small as possible
+to allow us to find and fix the error soon.
+
+Original author Salvador Tamarit
+Correspondence e-mail: <polca-project-madrid@software.imdea.org>
+
+Please send error reports for contributed files to the original authors.
+
+
+3. FILES IN THIS DISTRIBUTION
+=============================
+
+You should get the following files:
+
+  README           This file.
+
+  LICENSE          License file.
+
+  Makefile         Makefile file.
+
+  Rul2Has.hs       This is the Haskell module that translates STML rules
+  		   to a Haskell code stored in the file Rules.hs.
+
+  Main.hs	   This is the main module of the tool. 
+
+  Translator.hs 
+  PragmaPolcaLib.hs  
+  RulesLib.hs	   These modules contain functions used by all the
+		   other Haskell modules.
+
+  Compilable.hs 
+  Ast.hs 
+  Expander.hs
+  CompileRules.hs 
+  TestRules.hs 
+  TransExe.hs 
+  InitTransformation.hs 
+  AppTransformation.hs 
+  IsRollable.hs 
+  PragmaPolcaReader.hs 
+  PrettyPrinter.hs  These modules create the command line applications.
+
+  rules.c	   STML sample rules.
+
+  Rules.hs   An initial empty set of rules in Haskell.
+
+  polcas2s.cabal 
+  Setup.hs   Cabal files.
+
+  opencl_main_funs  Glue code for OpenCL translations.
+
+  dps.c		   A C file code with working examples (to test /
+                   check the current state of the tool). 
+
+  vec_mult.c	   Another C file sample. 
+
+  demo/*     A more complex and interesting example
+
+  cetus/cetus.tar.gz   Orginal Cetus Release 1.4.3 
+                        https://engineering.purdue.edu/Cetus/
+
+  cetus/mod/*       Cetus modified files to enable our annotations.
+
+  cetus/polca_changes.txt   List of previous changes
+
+  cetus/cetus.sh 
+  cetus/cetus_stml.sh 
+  cetus/options.cetus   Executable scripts and supporting files to run 
+              Cetus with our modifications.
+   
+
+
+4. INSTALLATION
+===============
 
 You need the following software and libraries in order to be able to
 run the tool: 
 
-| Software        | Description           | URL  |
-| ------------- |:-------------:| -----:|
-| GHC      | The Glasgow Haskell Compiler.  | https://www.haskell.org/ghc/ |
-| GCC      | GNU Compiler Collection      |   https://gcc.gnu.org/ |
-| Cabal   | Common Architecture for Building Applications and Libraries | https://www.haskell.org/cabal/ |
-| JDK | Java Development Kit (used by Cetus).      |    http://www.oracle.com/technetwork/java/javase/downloads/index.html |
-| Antlr | ANother Tool for Language Recognition (used by Cetus).      |    http://www.antlr.org/ |
-| Alex | Alex is a tool for generating lexical analysers in Haskell.      |    https://hackage.haskell.org/package/alex |
-| Happy | The Haskell Parser Generator.       |    http://hackage.haskell.org/package/happy |
-| Meld | [Optional] Meld is a visual diff and merge tool targeted at developers     |    http://meldmerge.org/ |
+  GHC              The Glasgow Haskell Compiler. 
+            https://www.haskell.org/ghc/
+
+  GCC             GNU Compiler Collection
+            https://gcc.gnu.org/
+  Cabal           Common Architecture for Building Applications and Libraries
+            https://www.haskell.org/cabal/
+
+  JDK               Java Development Kit (used by Cetus).
+            http://www.oracle.com/technetwork/java/javase/downloads/index.html
+
+  Antlr             ANother Tool for Language Recognition (used by Cetus).
+            http://www.antlr.org/
+
+  Alex             Alex is a tool for generating lexical analysers in Haskell.
+            https://hackage.haskell.org/package/alex
+
+  Happy            The Haskell Parser Generator. 
+            http://hackage.haskell.org/package/happy
+
+  Meld              [Optional] Meld is a visual diff and merge tool targeted at developers
+            http://meldmerge.org/
 
 
-Getting Started
----------------
+5. GETTING STARTED
+==================
 
 The first step is to install all the needed Haskell libraries and
 Cetus, a program transformation environment that our tool uses to
 annotate the code with some properties. All this is done by running
 the command:
 
-```
 $ make configure
 ...
 $
-```
 
 Before to start transforming your C code, you need to create a Haskell
 module named Rules.hs that contains all the STML rules translated
@@ -58,7 +187,6 @@ so we can use them as starting point or build a new file with a subset
 of them. For instance, if we choose the first option we can build our
 Rules.hs file by using:
 
-```
 $ make rules FILE=rules.c
 [1 of 4] Compiling RulesLib         ( RulesLib.hs, RulesLib.o )
 [2 of 4] Compiling PragmaPolcaLib   ( PragmaPolcaLib.hs, PragmaPolcaLib.o )
@@ -125,15 +253,14 @@ roll_up_array
 
 Rules.hs created.
 $
-```
 
 
 If you want to create your own rules, just create a new file and write
 down them there.  A guide of the functions provided by the (current)
 rule language follows:
 
+=======================================================================
 
-```
 GENERATE
 
 subs((S|[S]|E),E_F,E_T) -> 
@@ -171,16 +298,16 @@ is_block(S) ->
     True if the given statement is a block of statements.
 not(Cond) -> 
     True if Cond is False;
-```
+
+=======================================================================
 
 
-Transforming Your Code
-----------------------
+6. TRANSFORMING YOUR CODE
+=========================
 
 When the Rules.hs file has been created starting from the desired
 STML rule file, you can compile the main module of the tool:
 
-```
 $ make 
 ghc -main-is Compilable Compilable.hs -o polca_s2s
 [1 of 6] Compiling RulesLib         ( RulesLib.hs, RulesLib.o )
@@ -191,7 +318,6 @@ ghc -main-is Compilable Compilable.hs -o polca_s2s
 [6 of 6] Compiling Compilable       ( Compilable.hs, Compilable.o )
 Linking polca_s2s ...
 $
-```
 
 The system now is ready to transform a given C code.  
 
@@ -212,8 +338,6 @@ transformation.
 The interactive session is started by running the created executable,
 which receive as argument the target C file:
 
-
-```
 $ ./polca_s2s vec_mult.c
 Annotating the code using Cetus...
 AST successfully read from vec_mult.c and stored in vec_mult.ast
@@ -248,7 +372,6 @@ f -> Finalise transformation session
 -----------------------------------------------------------------
 
 Press ENTER to continue...
-```
 
 After selecting one of the rule numbers, the tool would show the
 effects of applying one of them and wait for confirmation to commit
@@ -256,7 +379,6 @@ the transformation, or discard applying the rle.
 
 Let us assume the user wants to apply rule number 4.
 
-```
 ? [1/2/3/4/5/6/7/8/h/r/s/c/ec/dc/p/f]: 4
 Do you want to apply rule for_loop_fusion_mapmap to this piece of code:
 
@@ -290,13 +412,12 @@ resulting in this new code:
     }
     _ret_val_0 = 0;
     return _ret_val_0;
-```
+
 
 The user can accept the transformation or not (returning to previous
 question). He/she can also to stop the rule application or finish the
 transformation process.
 
-```
 ? [y/n/a/c/d/v/s/h/f]: h
 ---------------------------------------------------------------
 Polca S2S Tool help.
@@ -314,12 +435,11 @@ f -> Finalise transformation session
 ---------------------------------------------------------------
 
 Press ENTER to continue...
-```
+
 
 If accepted, a new question is shown with the currently
 applicable rules.
 
-```
 ? [y/n/a/c/d/v/s/h/f]: y
 7
 What rule do you want to apply
@@ -331,11 +451,9 @@ What rule do you want to apply
 6.- remove_ternary
 
 ? [1/2/3/4/5/6/h/r/s/c/ec/dc/p/f]: 
-```
 
 The fifth transformation can improve the previous code.
 
-```
 ? [1/2/3/4/5/6/h/r/s/c/ec/dc/p/f]: 5
 Do you want to apply rule split_addition_assign to this piece of code:
 
@@ -434,12 +552,10 @@ What rule do you want to apply
 5.- remove_ternary
 
 ? [1/2/3/4/5/h/r/s/c/ec/dc/p/f]: f
-```
 
 After deciding to finalize the transformation process, the user
 has to choose the output platform.
 
-```
 To what platform do you want to generate current code:
 1.- opencl
 2.- mpi
@@ -454,14 +570,12 @@ To what platform do you want to generate current code:
 ? [1/2/3/4/5/6/7/8/9]: 1
 Transformed opencl code stored in vec_mult_opencl.c
 $
-```
 
 Note that the resulting code is stored in a file called as the
 original but with selected platform as suffix.
 
 The oracle-based mode works completely automatic using and oracle which in our case is a command. Therefore, it needs as an input a support command that reads JSON expressions and returns the transformation step that should be applied. The usage of this tool is as following:
 
-```
 $ make exe_ext
 ...
 $ ./polca_s2s_ext 
@@ -469,41 +583,12 @@ Usage:
           polca_s2s_ext command filename [polca_block]
 The command and the source file are needed.
 The name of a defined block is optional.
-```
 
-For instance, if one wants to run an oracle-based session using the [Machine Learning module](https://github.com/polca-project/polca-toolbox/tree/master/Machine%20learning%20component), the following command should be used:
+For instance, if one wants to run an oracle-based session using the Machine Learning module, the following command should be used:
 
-```
+
 $ ./polca_s2s_ext "../Machine learning component/static_analyser/s2s_ml_interface.py" vec_mult.c
-...
-```
-
+@\ldots@
 
 In case of doubt or for further information, please do not hesitate to
 contact us.
-
-License and Autorship
----------------------
-
-[License](./LICENSE.txt)
-
-[Authors](./AUTHORS.txt)
-
-Error Reports
--------------
-
-If you think you found a genuine bug please report it together
-with the following information:
-
-  - a short test file showing the behavior with all unnecessary
-    code removed.
-
-  - a transcript (log file) of the session that shows the error.
-
-Please note that it is important to make the file as small as possible
-to allow us to find and fix the error soon.
-
-Original author Salvador Tamarit
-Correspondence e-mail: <polca-project-madrid@software.imdea.org>
-
-Please send error reports for contributed files to the original authors.
