@@ -58,3 +58,10 @@ clean:
 	@rm -rf *.ast
 	@rm -rf *_temp*
 
+gitpre:
+	@cp Rules.hs RulesTemp.hs 
+	@cp RulesEmpty.hs Rules.hs 
+
+gitpost:
+	@cp RulesTemp.hs Rules.hs  
+

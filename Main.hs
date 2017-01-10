@@ -82,7 +82,7 @@ trans_to_platformInt name seq_id print_id polca_block =
 				_ -> 
 					"aut"
 		state <- getTransInt name mode 0 seq_id print_id polca_block ""
-		to_platform name state
+		writeTransFileWithoutAnns name state
 
 to_platform name state0 = 
 	do 
@@ -1095,7 +1095,8 @@ getTransInt name mode iter seq_id print_id polca_block command =
 					applyNrule initialState iter 
 					--applyNrule 0 iter ast1
 				"int" ->
-					applyruleInt initialState name Nothing True
+					-- applyruleInt initialState name Nothing True
+					applyRulesFixPoint initialState name Nothing True
 				"aut" ->
 					do 
 						steps <- readSteps name
@@ -1103,6 +1104,7 @@ getTransInt name mode iter seq_id print_id polca_block command =
 						applyruleInt initialState  name (Just steps) True
 		--let ast3 = rebuild_ast nstate
 		return nstate
+
 
 searchASTFun ast funDefs =
 	let 
@@ -1515,6 +1517,115 @@ askNextRule state =
 				-- return (([], []), False)
 			"y" ->
 				selectRuleToApply state
+
+applyRulesFixPoint :: TransState -> String -> Maybe [(String, Int)] -> Bool -> IO TransState
+applyRulesFixPoint state filename steps recalculate = 
+	do 
+		let changes@(listChangesStmts, listChangesExprs) =
+			getApplicableChanges [] state
+		let rules = nub $
+				[rule | (_,((rule,_,_),_,_)) <- listChangesStmts] 
+			++ 	[rule | (_,((rule,_,_),_,_)) <- listChangesExprs]
+		case rules of 
+			[] -> 
+				do 
+					putStrLn "No more rules can be applied"
+					return state
+			_ ->
+				do  
+					let nstate = 
+						state
+					let listChangesExprsToStmts = 
+						[(True, (fun, ((rule,(CExpr (Just old) undefNodeAnn),(CExpr (Just new) undefNodeAnn)),nstate, unknownProps))) 
+						 | (fun, ((rule,old,new),nstate, unknownProps)) <- listChangesExprs]
+					let listChangesStmtsToStmts = 
+						[(False, item) 
+						 | item@(_,((rule,_,_),_,_)) <- listChangesStmts]
+					let ((expr,(fun, ((rule,old,new),nstate, _))):_) = 
+						listChangesExprsToStmts ++ listChangesStmtsToStmts
+					let (oldStr, newStr) = 
+						(printChangeWithoutAnns old, printChangeWithoutAnns new)
+					putStrLn "\n*********************************************\n"
+					putStrLn ("Applied rule " ++ rule ++ " to this piece of code:\n\n" 
+						++ oldStr ++ "\n\nresulting in this new code:\n\n" 
+						++ newStr ++ "\n")	
+					let nfun_defs = 
+						case expr of 
+							False -> 
+								changeASTFun (fun, old, new) state
+							True -> 
+								changeASTFun (fun, removeStmtForExpr old, removeStmtForExpr new) state
+					let fstate = 
+						nstate
+							{
+					 			fun_defs = nfun_defs,
+					 			last_changed = fun,
+					 			print_id = (print_id nstate) + 1,
+					 			applied_rules = (rule:(applied_rules nstate))
+							}
+					return fstate
+					-- return applyRulesFixPoint fstate filename steps recalculate
+				
+
+
+			-- (Just (item@(_,indice):nsteps)) ->
+			-- 	do 
+			-- 		let (expr,(fun, ((rule,old,new),nstate, _)))  = wholeList!!indice
+			-- 		let (nold, nnew) = 
+			-- 			case rule of 
+			-- 				--"inlining" -> 
+			-- 				--	head(concat [ 
+			-- 				--		[ (oldChange, newChange)
+			-- 				--		|  ((ruleChange, oldChange, newChange), _) <- (applyRulesGeneral (ruleStmt state0) old), ruleChange == "inlining"] 
+			-- 				--	| ruleStmt <- stmtRules])
+			-- 				_ ->
+			-- 					(old, new)
+			-- 		let (oldStr, newStr) = 
+			-- 			case (trans_with_anns state0) of 
+			-- 				True ->
+			-- 					(printChange nold state0, printChange nnew nstate)
+			-- 				False ->
+			-- 					(printChangeWithoutAnns nold, printChangeWithoutAnns nnew)
+			-- 		putStrLn "\n*********************************************\n"
+			-- 		putStrLn ("Applied rule " ++ rule ++ " to this piece of code:\n\n" 
+			-- 			++ oldStr ++ "\n\nresulting in this new code:\n\n" 
+			-- 			++ newStr ++ "\n")	
+			-- 		let nfun_defs = 
+			-- 			case expr of 
+			-- 				False -> 
+			-- 					changeASTFun (fun,nold,nnew) state0
+			-- 				True -> 
+			-- 					changeASTFun (fun, removeStmtForExpr old,removeStmtForExpr new) state0
+			-- 		applyruleInt 
+			-- 			(nstate
+			-- 			{
+			-- 				--current_ast = nast, 
+			-- 				--fun_defs = nfun_defs,
+			-- 				--last_changed = fun,
+			-- 				--previous_changes = changes
+			-- 				trans_with_anns = (trans_with_anns state0),
+			-- 	 			fun_defs = nfun_defs,
+			-- 	 			last_changed = fun,
+			-- 	 			print_id = (print_id nstate) + 1,
+			-- 	 			applied_rules = (rule:(applied_rules nstate)),
+			-- 	 			acc_steps = (item:(acc_steps nstate))
+			-- 			}) 
+			-- 			filename (Just nsteps) True			
+
+-- fixPointSimplify stmt funSearch funTrans = 
+-- 	let 
+-- 		simplificable = applyRulesGeneral funSearch stmt
+-- 		nstmt = 
+-- 			foldl 
+-- 				(\ast change -> changeAST change ast)
+-- 				stmt
+-- 				[(sim, funTrans sim) | sim <- simplificable]
+-- 	in 
+-- 		case (geq nstmt stmt) of 
+-- 			True -> 
+-- 				nstmt 
+-- 			False ->
+-- 				fixPointSimplify nstmt funSearch funTrans
 
 applyruleInt :: TransState -> String -> Maybe [(String, Int)] -> Bool -> IO TransState
 applyruleInt state filename steps recalculate = 

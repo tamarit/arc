@@ -17,3 +17,10 @@ cabal.sandbox.config
 *.eventlog
 .stack-work/
 cabal.project.local
+
+examples/*
+
+
+RulesTemp.hs
+
+TODO
